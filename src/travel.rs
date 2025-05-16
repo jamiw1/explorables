@@ -1,34 +1,22 @@
 use std::env;
 use std::fs;
 use std::process::Command;
+use open::commands;
 
-fn open_file(path: &str) -> Result<(), String> {
-    let os = env::consts::OS;
-    
-    match os {
-        "windows" => {
-            Command::new("start")
-                .arg(path)
-                .spawn()
-                .map_err(|e| format!("Failed to open file: {}", e))
-                .map(|_| ())
-        }
-        "macos" => {
-            Command::new("open")
-                .arg(path)
-                .spawn()
-                .map_err(|e| format!("Failed to open file: {}", e))
-                .map(|_| ())
-        }
-        "linux" => {
-            Command::new("xdg-open")
-                .arg(path)
-                .spawn()
-                .map_err(|e| format!("Failed to open file: {}", e))
-                .map(|_| ())
-        }
-        _ => Err(format!("Unsupported OS: {}", os)),
+fn is_executable(path: &str) -> bool {
+    let _metadata = match fs::metadata(path) {
+        Ok(m) => m,
+        Err(_) => return false,
+    };
+
+    if cfg!(target_os = "windows") {
+        let ext = path.split('.').last().unwrap_or("");
+        return matches!(ext.to_lowercase().as_str(), 
+            "exe" | "com" | "bat" | "cmd" | "js" | "vbs" | "wsf" | "ps1"
+        );
     }
+
+    false
 }
 
 fn run_executable(path: &str) {
@@ -55,9 +43,13 @@ pub fn travel(path: &str) -> String {
             env::set_current_dir(&path).expect("Failed to change directory");
         }
     } else if fs::metadata(&path).unwrap().is_file() {
-        if open_file(&path).is_err() {
+        if is_executable(&path) {
+            run_executable(&path);
+        } else if commands(&path)[0].status().is_err() {
             return format!("Failed to open file: {}", &path);
         }
+        
+
     }
     return String::new();
     
