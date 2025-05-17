@@ -11,13 +11,20 @@ fn set_path(input: &str) {
     }
 }
 
-fn print_prompt_message(first_time: bool, search: bool) {
+fn print_prompt_message(first_time: bool, search: bool, search_input: &str) {
+    let current_dir = env::current_dir().unwrap();
+    let current_path = current_dir.to_str().unwrap();
     if first_time == false && search == false {
-        println!("\x1B[35;1m{}\x1B[0m \x1B[2m|->\x1B[0m enter a path, type ':h' for help or ':q' to quit\x1B[0m", env::current_dir().unwrap().to_str().expect("Failed to get current directory"));
+        println!("\x1B[35;1m{}\x1B[0m \x1B[2m|->\x1B[0m enter a path, type ':h' for help or ':q' to quit\x1B[0m", &current_path);
     } else if search == true {
-        println!("\x1B[35;1m{}\x1B[0m \x1B[2m|->\x1B[0m search for contents in this folder... exit search with ':s'\x1B[0m", env::current_dir().unwrap().to_str().expect("Failed to get current directory"));
+        if search_input != "" {
+            println!("\x1B[35;1m{}\x1B[0m \x1B[2m|->\x1B[0m results for '{}' - exit search with ':s'\x1B[0m", &current_path, &search_input);
+        } else {
+            println!("\x1B[35;1m{}\x1B[0m \x1B[2m|->\x1B[0m search for contents in this folder... exit search with ':s'\x1B[0m", &current_path);
+        }
+        
     } else {
-        println!("\x1B[35;1mC:\\\x1B[0m \x1B[2m|->\x1B[0m \x1B[31;1m{} v{}\x1B[0m \x1B[37menter a path, type ':h' for help or ':q' to quit\x1B[0m", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+        println!("\x1B[35;1m{}\x1B[0m \x1B[2m|->\x1B[0m \x1B[31;1m{} v{}\x1B[0m \x1B[37menter a path, type ':h' for help or ':q' to quit\x1B[0m", &current_path, env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
     }
 }
 fn main() {
@@ -41,9 +48,14 @@ fn main() {
             return;
         }
     }
+
+    if cfg!(target_os = "windows") {
+        set_path("C:\\");
+    } else {
+        set_path("/");
+    }
     
-    set_path("C:\\");
-    print_prompt_message(true, false);
+    print_prompt_message(true, false, "");
     loop {
         let current_dir = env::current_dir().unwrap();
         let current_path = current_dir.to_str().unwrap();
@@ -55,37 +67,40 @@ fn main() {
             ":h" => {
                 println!("\x1B[2J\x1B[1;1H");
                 println!("command list:\n:q - quit the program\n:h - brings up this help page\n:v - displays current version\n:s - toggle searching contents of folder");
-                print_prompt_message(false,false);
+                print_prompt_message(false,false, "");
             },
             ":v" => {
                 println!("\x1B[2J\x1B[1;1H");
                 println!("{} version {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
-                print_prompt_message(false,false);
+                print_prompt_message(false,false, "");
             },
             ":s" => {
                 println!("\x1B[2J\x1B[1;1H");
                 if searching == true {
                     searching = false;
                     set_path(&current_path); 
-                    print_prompt_message(false,false);
+                    print_prompt_message(false,false, "");
                 } else {
                     searching = true;
                     list_dir::list(&current_path, "");
-                    print_prompt_message(false,true);
+                    print_prompt_message(false,true, "");
                 }
             },
             _ => {
                 println!("\x1B[2J\x1B[1;1H");
                 if searching == false {
                     set_path(&input); 
-                    print_prompt_message(false,false);
+                    print_prompt_message(false,false, "");
                 } else {
                     search_input = input.to_string();
-                    list_dir::list(&current_path, &search_input);
-                    print_prompt_message(false,true);
+                    if list_dir::find_file(&current_path, &search_input) == true || &search_input == ".." {
+                        set_path(&input);
+                        search_input = "".to_string();
+                    } else {
+                        list_dir::list(&current_path, &search_input);
+                    }
+                    print_prompt_message(false,true, &search_input.as_str());
                 }
-                   
-                
             }
         }
     }
