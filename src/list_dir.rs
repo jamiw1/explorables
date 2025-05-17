@@ -1,6 +1,6 @@
 use std::fs;
 
-pub fn list(path: &str) {
+pub fn list(path: &str, search_input: &str) {
     let mut list_of_files: Vec<fs::DirEntry> = Vec::new();
     let mut list_of_folders: Vec<fs::DirEntry> = Vec::new();
 
@@ -8,11 +8,24 @@ pub fn list(path: &str) {
         let entry = entry.unwrap();
         if entry.file_type().unwrap().is_dir() == true {
             // Yellow color for folders
-            list_of_folders.push(entry);
+            if search_input != "" {
+                if entry.file_name().to_str().unwrap().contains(search_input) {
+                    list_of_folders.push(entry);
+                }
+            } else {
+                list_of_folders.push(entry);
+            }
+            
             //println!("\x1B[33m{} \x1B[90m<-folder-> \x1B[37m{}\x1B[0m", file_name.into_string().unwrap(), path.display());
         } else {
             // Cyan color for files
-            list_of_files.push(entry);
+            if search_input != "" {
+                if entry.file_name().to_str().unwrap().contains(search_input) {
+                    list_of_files.push(entry);
+                }
+            } else {
+                list_of_files.push(entry);
+            }
             //println!("\x1B[36m{} \x1B[90m<-file-| \x1B[37m{}\x1B[0m", file_name.into_string().unwrap(), path.display());
         }
     }
