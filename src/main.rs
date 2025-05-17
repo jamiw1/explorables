@@ -15,14 +15,14 @@ fn print_prompt_message(first_time: bool, search: bool) {
     if first_time == false && search == false {
         println!("\x1B[35;1m{}\x1B[0m \x1B[2m|->\x1B[0m enter a path, type ':h' for help or ':q' to quit\x1B[0m", env::current_dir().unwrap().to_str().expect("Failed to get current directory"));
     } else if search == true {
-        println!("\x1B[35;1m{}\x1B[0m \x1B[2m|->\x1B[0m search for contents in this folder...\x1B[0m", env::current_dir().unwrap().to_str().expect("Failed to get current directory"));
+        println!("\x1B[35;1m{}\x1B[0m \x1B[2m|->\x1B[0m search for contents in this folder... exit search with ':s'\x1B[0m", env::current_dir().unwrap().to_str().expect("Failed to get current directory"));
     } else {
         println!("\x1B[35;1mC:\\\x1B[0m \x1B[2m|->\x1B[0m \x1B[31;1m{} v{}\x1B[0m \x1B[37menter a path, type ':h' for help or ':q' to quit\x1B[0m", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
     }
 }
 fn main() {
     let mut searching = false;
-    let mut search_input = String::new();
+    let mut search_input: String;
    
     let args: Vec<String> = env::args().collect();
     
@@ -54,7 +54,7 @@ fn main() {
             ":q" => break,
             ":h" => {
                 println!("\x1B[2J\x1B[1;1H");
-                println!("command list:\n:q - quit the program\n:h - brings up this help page\n:v - displays current version\n:s - search contents of folder");
+                println!("command list:\n:q - quit the program\n:h - brings up this help page\n:v - displays current version\n:s - toggle searching contents of folder");
                 print_prompt_message(false,false);
             },
             ":v" => {
