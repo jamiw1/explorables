@@ -25,17 +25,21 @@ fn get_list(path: &str, search_input: &str) -> (Vec<DirEntry>, Vec<DirEntry>) {
     }
     return (list_of_folders, list_of_files);
 }
-pub fn find_file(path: &str, name: &str) -> bool {
+pub fn find_file(path: &str, name: &str) -> String {
     let init_list = get_list(&path, &name);
     let mut list = init_list.0;
     list.extend(init_list.1);
+    if list.len() == 1 {
+        return list[0].path().display().to_string();
+    }
     for file in list {
         let file_name = file.file_name();
         if file_name.to_str().unwrap() == name {
-            return true;
+            return file.path().display().to_string();
         }
     }
-    return false;
+    
+    "".to_string()
 }
 
 pub fn list(path: &str, search_input: &str) {
